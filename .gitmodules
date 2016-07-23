@@ -1,0 +1,3 @@
+[submodule "vendor/gopkg.in/mgo.v2"]
+	path = vendor/gopkg.in/mgo.v2
+	url = git@github.com:go-mgo/mgo.git
