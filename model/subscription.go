@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pborman/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -36,6 +37,7 @@ func SaveSubscription(sub Subscription) (resultSub Subscription, err error) {
 	defer session.Close()
 	c := session.DB(DBName).C(SubscriptionCollection)
 
+	sub.ID = uuid.NewUUID().String()
 	sub.Timestamp = time.Now().UnixNano()
 	err = c.Insert(sub)
 	if err != nil {
@@ -50,9 +52,39 @@ func FindSubscriptionByID(id string) (sub Subscription, err error) {
 	defer session.Close()
 	c := session.DB(DBName).C(SubscriptionCollection)
 
-	err = c.FindId(bson.ObjectIdHex(id)).One(&sub)
+	err = c.FindId(id).One(&sub)
 	if err != nil {
 		return sub, err
 	}
 	return sub, nil
+}
+
+// FindAllSubscriptionsByType returns a slice of subscriptions having a given type
+func FindAllSubscriptionsByType(subType string) (subs []Subscription, err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(SubscriptionCollection)
+
+	err = c.Find(bson.M{"type": subType}).All(&subs)
+	return subs, err
+}
+
+// FindAllSubscriptions returns a slice of all subscriptions
+func FindAllSubscriptions() (subs []Subscription, err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(SubscriptionCollection)
+
+	err = c.Find(nil).All(&subs)
+	return subs, err
+}
+
+// DeleteSubscriptionByID deletes a given subscription having a given id
+func DeleteSubscriptionByID(subID string) (err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(SubscriptionCollection)
+
+	err = c.RemoveId(subID)
+	return err
 }

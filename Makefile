@@ -18,7 +18,7 @@ install:
 .PHONY: clean
 clean:
 	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
-	if [ -f coverage.txt ] ; then rm coverage.txt ; fi
+	if [ -f .coverage.txt ] ; then rm .coverage.txt ; fi
 	find ./ -name .coverprofile -print0 | xargs -0 rm
 
 
@@ -31,7 +31,8 @@ test: $(SOURCES)
 integration:
 	go test . -coverprofile=.coverprofile -covermode=atomic
 	go test ./model -coverprofile=./model/.coverprofile -covermode=atomic -tags integration
-	gover . coverage.txt
+	go test ./route -coverprofile=./route/.coverprofile -covermode=atomic -tags integration
+	gover . .coverage.txt
 
 build: $(SOURCES)
 	go build -o ${BINARY} $(SOURCEDIR)/*.go

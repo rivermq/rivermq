@@ -33,6 +33,7 @@ func SaveMessage(msg Message) (resultMsg Message, err error) {
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
 
+	msg.ID = bson.NewObjectId().String()
 	msg.Timestamp = time.Now().UnixNano()
 	err = c.Insert(msg)
 	if err != nil {

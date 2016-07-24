@@ -1,3 +1,12 @@
 [submodule "vendor/gopkg.in/mgo.v2"]
 	path = vendor/gopkg.in/mgo.v2
 	url = git@github.com:go-mgo/mgo.git
+[submodule "vendor/github.com/gorilla/mux"]
+	path = vendor/github.com/gorilla/mux
+	url = git@github.com:gorilla/mux.git
+[submodule "vendor/github.com/gorilla/context"]
+	path = vendor/github.com/gorilla/context
+	url = git@github.com:gorilla/context.git
+[submodule "vendor/github.com/pborman/uuid"]
+	path = vendor/github.com/pborman/uuid
+	url = git@github.com:pborman/uuid.git
