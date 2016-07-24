@@ -1,0 +1,19 @@
+language: go
+
+go:
+  - 1.6
+
+# Submodule fix: https://gist.github.com/iedemam/9830045
+git:
+  submodules: false
+
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+  - go get github.com/modocache/gover
+
+services:
+  - mongodb
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
