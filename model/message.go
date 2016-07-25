@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"github.com/pborman/uuid"
 )
 
 // Message provides a message to be distributed by RiverMQ
@@ -33,7 +33,7 @@ func SaveMessage(msg Message) (resultMsg Message, err error) {
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
 
-	msg.ID = bson.NewObjectId().String()
+	msg.ID = uuid.NewUUID().String()
 	msg.Timestamp = time.Now().UnixNano()
 	err = c.Insert(msg)
 	if err != nil {
@@ -48,7 +48,7 @@ func FindMessageByID(id string) (msg Message, err error) {
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
 
-	err = c.FindId(bson.ObjectIdHex(id)).One(&msg)
+	err = c.FindId(id).One(&msg)
 	if err != nil {
 		return msg, err
 	}

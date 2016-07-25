@@ -15,8 +15,9 @@ var (
 	}
 
 	msg = Message{
-		Type: "messageType",
-		Body: []byte("{}"),
+		Type:   "messageType",
+		Status: "ACCEPTED",
+		Body:   []byte("{}"),
 	}
 )
 
@@ -24,6 +25,24 @@ func TestSaveMessage(t *testing.T) {
 	_, err := SaveMessage(msg)
 	if err != nil {
 		t.Error(err)
+	}
+	dropMessageCollection()
+}
+
+func TestFindMessageByID(t *testing.T) {
+	savedMsg, err := SaveMessage(msg)
+	if err != nil {
+		t.Error(err)
+	}
+	if &savedMsg == nil {
+		t.Error("SavedMsg is nil")
+	}
+	foundMsg, err := FindMessageByID(savedMsg.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if &foundMsg == nil {
+		t.Error("Unable to find message for id: ", savedMsg.ID)
 	}
 	dropMessageCollection()
 }

@@ -9,6 +9,23 @@ import (
 	"github.com/rivermq/rivermq/model"
 )
 
+// CreateMessageHander accepts a message or delivery
+func CreateMessageHander(w http.ResponseWriter, r *http.Request) {
+	var msg model.Message
+	json.NewDecoder(r.Body).Decode(&msg)
+	msg.Status = "ACCEPTED"
+	resultMsg, err := model.SaveMessage(msg)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, err)
+	} else {
+		w.WriteHeader(http.StatusAccepted)
+		if err := json.NewEncoder(w).Encode(resultMsg); err != nil {
+			panic(err)
+		}
+	}
+}
+
 // CreateSubscriptionHandler does that
 func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	var sub model.Subscription

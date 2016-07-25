@@ -56,4 +56,11 @@ var routes = Routes{
 		handler.DeleteSubscriptionByIDHandler,
 		nil,
 	},
+	Route{
+		"CreateMessageHander",
+		"POST",
+		"/messages",
+		handler.CreateMessageHander,
+		nil,
+	},
 }
