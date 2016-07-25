@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/rivermq/rivermq.svg?branch=master)](https://travis-ci.org/rivermq/rivermq) [![codecov.io](https://codecov.io/github/rivermq/rivermq/coverage.svg?branch=master)](https://codecov.io/github/rivermq/rivermq?branch=master)
+[![Build Status](https://travis-ci.org/rivermq/rivermq.svg?branch=master)](https://travis-ci.org/rivermq/rivermq) [![codecov](https://codecov.io/gh/rivermq/rivermq/branch/master/graph/badge.svg)](https://codecov.io/gh/rivermq/rivermq)
+
 
 RiverMQ
 ========
@@ -34,4 +35,3 @@ go get github.com/modocache/gover
 ```
 
 Developed using [Atom](https://atom.io/) [configured for Go development](http://marcio.io/2015/07/supercharging-atom-editor-for-go-development).
-
