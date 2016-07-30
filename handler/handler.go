@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rivermq/rivermq/inspect"
 	"github.com/rivermq/rivermq/model"
 )
 
@@ -15,6 +16,7 @@ func CreateMessageHander(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&msg)
 	msg.Status = "ACCEPTED"
 	resultMsg, err := model.SaveMessage(msg)
+	inspect.HandleMessage(msg)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, err)
