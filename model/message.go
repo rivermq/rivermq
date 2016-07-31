@@ -7,15 +7,37 @@ import (
 	"time"
 
 	"github.com/pborman/uuid"
+	"gopkg.in/mgo.v2/bson"
+)
+
+const (
+	// StatusAccepted indicateds that a Message has been accepted, but has not
+	// been processed
+	StatusAccepted = "ACCEPTED"
+
+	// StatusInspected indicates that a Message has been inspected and there are
+	// are current Subscriptions expecting to receive the message
+	StatusInspected = "INSPECTED"
+
+	// StatusFailedDelivery indicates that RiverMQ was unable to deliver the
+	// message.  When this occurs the 'RetryEndpoint' property is set, a new ID
+	// is generated and the Message is saved to MongoDB.  At a later time RiverMQ
+	// will attempt to redeliver the message.
+	StatusFailedDelivery = "FAILED_DELIVERY"
+
+	// StatusDeliveryRetrySuccess indicates that the message has been successfully
+	// delivered on retry and no further actions are required.
+	StatusDeliveryRetrySuccess = "DELIVERY_RETRY_SUCCESS"
 )
 
 // Message provides a message to be distributed by RiverMQ
 type Message struct {
-	ID        string          `json:"id "bson:"_id,omitempty"`
-	Timestamp int64           `json:"timestamp"`
-	Type      string          `json:"type"`
-	Status    string          `json:"status"`
-	Body      json.RawMessage `json:"body"`
+	ID            string          `json:"id" bson:"_id,omitempty"`
+	Timestamp     time.Time       `json:"timestamp"`
+	Type          string          `json:"type"`
+	Status        string          `json:"status"`
+	RetryEndpoint string          `json:"retryEndpoint,omitempty"`
+	Body          json.RawMessage `json:"body"`
 }
 
 // ValidateMessage ensures a message is valid
@@ -34,12 +56,39 @@ func SaveMessage(msg Message) (resultMsg Message, err error) {
 	c := session.DB(DBName).C(MessageCollection)
 
 	msg.ID = uuid.NewUUID().String()
-	msg.Timestamp = time.Now().UnixNano()
+	msg.Timestamp = bson.Now()
 	err = c.Insert(msg)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return msg, err
+}
+
+// SaveFailedDeliveryMessage prepares a message for redelivery and saves it
+// to the DB
+func SaveFailedDeliveryMessage(msg Message, sub Subscription) (err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(MessageCollection)
+
+	// prepare message for retry delivery
+	msg.ID = uuid.NewUUID().String()
+	msg.Status = StatusFailedDelivery
+	msg.RetryEndpoint = sub.CallbackURL
+	msg.Timestamp = bson.Now()
+
+	err = c.Insert(msg)
+	return err
+}
+
+// UpdateMessage updates a given message in the db
+func UpdateMessage(msg Message) (err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(MessageCollection)
+
+	err = c.UpdateId(msg.ID, msg)
+	return err
 }
 
 // FindMessageByID finds a given message by its id
@@ -53,4 +102,15 @@ func FindMessageByID(id string) (msg Message, err error) {
 		return msg, err
 	}
 	return msg, nil
+}
+
+// FindMessageByStatus finds all messages which contain the supplied status
+func FindMessageByStatus(status string) (messages []Message, err error) {
+	session := DBSession.Copy()
+	defer session.Close()
+	c := session.DB(DBName).C(MessageCollection)
+
+	err = c.Find(bson.M{"status": status}).All(&messages)
+	return messages, err
+
 }

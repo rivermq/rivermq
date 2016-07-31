@@ -18,6 +18,7 @@ const (
 )
 
 func TestCreateMessageHandler(t *testing.T) {
+	defer dropMessageCollection()
 	buf := bytes.NewBufferString(validMsg)
 	req, _ := http.NewRequest("POST", "/messages", buf)
 	res := httptest.NewRecorder()
@@ -30,10 +31,10 @@ func TestCreateMessageHandler(t *testing.T) {
 	if msg.Status != "ACCEPTED" {
 		t.Errorf("Message save failure.  Expected msg.Status of %s to be \"Accepted\".", msg.Status)
 	}
-	dropMessageCollection()
 }
 
 func TestCreateSubscriptionHandler(t *testing.T) {
+	defer dropSubscriptionCollection()
 	buf := bytes.NewBufferString(validSub)
 	req, _ := http.NewRequest("POST", "/subscriptions", buf)
 	res := httptest.NewRecorder()
@@ -43,13 +44,13 @@ func TestCreateSubscriptionHandler(t *testing.T) {
 	}
 	var sub *Subscription
 	json.NewDecoder(res.Body).Decode(&sub)
-	if sub.Timestamp <= 0 {
+	if sub.Timestamp.Nanosecond() <= 0 {
 		t.Error("Subscription save failure")
 	}
-	dropSubscriptionCollection()
 }
 
 func TestFindAllSubscriptionsHandler(t *testing.T) {
+	defer dropSubscriptionCollection()
 	for port := 9080; port < 9090; port++ {
 		SaveSubscription(
 			Subscription{
@@ -68,6 +69,7 @@ func TestFindAllSubscriptionsHandler(t *testing.T) {
 }
 
 func TestFindSubscriptionByIDHandler(t *testing.T) {
+	defer dropSubscriptionCollection()
 	sub, _ := SaveSubscription(Subscription{
 		Type:        "messageType",
 		CallbackURL: "http://localhost:123/site",
@@ -78,10 +80,10 @@ func TestFindSubscriptionByIDHandler(t *testing.T) {
 	if res.Code != http.StatusOK {
 		t.Errorf("FindSubscription failure.  Expected %d to be %d", res.Code, http.StatusOK)
 	}
-	dropSubscriptionCollection()
 }
 
 func TestDeleteSubscriptionByIDHandler(t *testing.T) {
+	defer dropSubscriptionCollection()
 	sub, _ := SaveSubscription(Subscription{
 		Type:        "messageType",
 		CallbackURL: "http://localhost:123/site",
@@ -92,7 +94,6 @@ func TestDeleteSubscriptionByIDHandler(t *testing.T) {
 	if res.Code != http.StatusOK {
 		t.Errorf("DeleteSubscription failure.  Expected %d to be %d", res.Code, http.StatusOK)
 	}
-	dropSubscriptionCollection()
 }
 
 func dropSubscriptionCollection() {
@@ -107,4 +108,5 @@ func dropMessageCollection() {
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
 	c.DropCollection()
+	c.DropIndex("timestamp")
 }

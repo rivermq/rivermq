@@ -2,8 +2,10 @@ package model
 
 import (
 	"flag"
-	"gopkg.in/mgo.v2"
 	"sync"
+	"time"
+
+	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -40,5 +42,15 @@ func init() {
 		}
 		session.SetMode(mgo.Monotonic, true)
 		DBSession = session
+
+		msgCollection := session.DB(DBName).C(MessageCollection)
+
+		err = msgCollection.EnsureIndex(mgo.Index{
+			Key:         []string{"timestamp"},
+			ExpireAfter: 30 * time.Minute,
+		})
+		if err != nil {
+			panic(err)
+		}
 	})
 }

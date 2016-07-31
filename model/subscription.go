@@ -12,10 +12,10 @@ import (
 
 // Subscription provides the data required to create a Subscription for clients
 type Subscription struct {
-	ID          string `json:"id" bson:"_id,omitempty"`
-	Timestamp   int64  `json:"timestamp"`
-	Type        string `json:"type"`
-	CallbackURL string `json:"callbackUrl"`
+	ID          string    `json:"id" bson:"_id,omitempty"`
+	Timestamp   time.Time `json:"timestamp"`
+	Type        string    `json:"type"`
+	CallbackURL string    `json:"callbackUrl"`
 }
 
 // ValidateSubscription performs sanity checks on a Subscription instance
@@ -38,7 +38,7 @@ func SaveSubscription(sub Subscription) (resultSub Subscription, err error) {
 	c := session.DB(DBName).C(SubscriptionCollection)
 
 	sub.ID = uuid.NewUUID().String()
-	sub.Timestamp = time.Now().UnixNano()
+	sub.Timestamp = bson.Now()
 	err = c.Insert(sub)
 	if err != nil {
 		log.Fatal(err)

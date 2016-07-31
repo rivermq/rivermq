@@ -2,27 +2,30 @@ package deliver
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"github.com/rivermq/rivermq/model"
+	"log"
 	"net/http"
+
+	"github.com/rivermq/rivermq/model"
 )
 
-// AttemptMessageDistrobution passes the provided Message to the provided Subscription
+// AttemptMessageDistrobution passes the provided Message to the provided
+// Subscription.CallbackURL.  If delivery fails, the message is saved to the DB
+// for redelivery at a later time.
 func AttemptMessageDistrobution(msg model.Message, sub model.Subscription) (err error) {
-	fmt.Println("DeliverMessage")
-	msgJSON, err := json.Marshal(msg)
-	if err != nil {
-		fmt.Printf("Error: %v", err)
-	}
-	req, err := http.NewRequest("POST", sub.CallbackURL, bytes.NewBuffer(msgJSON))
+	req, err := http.NewRequest("POST", sub.CallbackURL, bytes.NewBuffer(msg.Body))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		model.SaveFailedDeliveryMessage(msg, sub)
+	} else {
+		defer resp.Body.Close() // TODO: determine if this is necessary
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+			err := model.SaveFailedDeliveryMessage(msg, sub)
+			if err != nil {
+				log.Printf("Error while saving Failed Delivery Message: %v", err)
+			}
+		}
 	}
-	defer resp.Body.Close()
-	fmt.Println("response Status:", resp.Status)
 	return nil
 }

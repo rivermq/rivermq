@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	. "github.com/rivermq/rivermq/model"
 	. "github.com/rivermq/rivermq/route"
@@ -57,12 +58,53 @@ func TestAttemptMessageDistrobution(t *testing.T) {
 	}
 
 	// Channel blocks while waiting for a response from the testServer to verify
-	// that the message was delivered
+	// that RiverMQ delivered the message to the testServer
 	result := <-resultChannel
 	if !result {
 		t.Error("Failed to receive message")
 	}
 
+}
+
+func TestAttemptMessageDistrobutionFailure(t *testing.T) {
+	defer dropMessageCollection()
+	defer dropSubscriptionCollection()
+	// Create subscription in RiverMQ
+	sub := Subscription{
+		Type:        "msgType",
+		CallbackURL: "http://localhost:3234234234",
+	}
+	subJSON, err := json.Marshal(sub)
+	if err != nil {
+		t.Error(err)
+	}
+	buf := bytes.NewBuffer(subJSON)
+	req, _ := http.NewRequest("POST", "/subscriptions", buf)
+	res := httptest.NewRecorder()
+	NewRiverMQRouter().ServeHTTP(res, req)
+	if res.Code != http.StatusCreated {
+		t.Errorf("CreateSubscription failure.  Expected %d to be %d\n", res.Code, http.StatusCreated)
+	}
+
+	// Send message to RiverMQ
+	msgBuf := bytes.NewBufferString(validMsg)
+	msgReq, _ := http.NewRequest("POST", "/messages", msgBuf)
+	msgRes := httptest.NewRecorder()
+	NewRiverMQRouter().ServeHTTP(msgRes, msgReq)
+	if msgRes.Code != http.StatusAccepted {
+		t.Errorf("CreateMessage failure.  Expected %d to be %d\n", msgRes.Code, http.StatusAccepted)
+	}
+	time.Sleep(500 * time.Millisecond)
+	messages, err := FindMessageByStatus(StatusFailedDelivery)
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+	if len(messages) != 1 {
+		t.Errorf("FindMessageByStatus failure: Expected %d, found %d\n", 1, len(messages))
+	}
+	if messages[0].Status != StatusFailedDelivery {
+		t.Errorf("FindMessageByStatus failure: Expected %s, found %s\n", StatusFailedDelivery, messages[0].Status)
+	}
 }
 
 func dropSubscriptionCollection() {
@@ -77,4 +119,5 @@ func dropMessageCollection() {
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
 	c.DropCollection()
+	c.DropIndex("timestamp")
 }

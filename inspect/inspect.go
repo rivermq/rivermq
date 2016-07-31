@@ -1,7 +1,7 @@
 package inspect
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/rivermq/rivermq/deliver"
 	"github.com/rivermq/rivermq/model"
@@ -11,15 +11,20 @@ import (
 // either drops it, if no Subscriptions are found, or passes it on
 // for delivery
 func HandleMessage(msg model.Message) (err error) {
-	fmt.Println("handle message")
 	subs, err := model.FindAllSubscriptionsByType(msg.Type)
 	if err != nil {
-		fmt.Printf("Error: %v", err)
+		log.Printf("Error: %v\n", err)
+		return err
 	}
 	if len(subs) > 0 {
+		msg.Status = model.StatusInspected
+		model.UpdateMessage(msg)
 		for _, sub := range subs {
-			deliver.AttemptMessageDistrobution(msg, sub)
+			go func(msg model.Message, sub model.Subscription) {
+				deliver.AttemptMessageDistrobution(msg, sub)
+			}(msg, sub)
 		}
 	}
+
 	return nil
 }

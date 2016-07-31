@@ -14,9 +14,11 @@ import (
 func CreateMessageHander(w http.ResponseWriter, r *http.Request) {
 	var msg model.Message
 	json.NewDecoder(r.Body).Decode(&msg)
-	msg.Status = "ACCEPTED"
+	msg.Status = model.StatusAccepted
 	resultMsg, err := model.SaveMessage(msg)
-	inspect.HandleMessage(msg)
+	go func(msg model.Message) {
+		inspect.HandleMessage(msg)
+	}(resultMsg)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, err)
