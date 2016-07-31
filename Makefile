@@ -33,7 +33,7 @@ integration:
 	go test ./route   -coverprofile=./route/.coverprofile   -covermode=atomic -tags integration
 	go test ./handler -coverprofile=./handler/.coverprofile -covermode=atomic -tags integration
 	go test ./deliver -coverprofile=./deliver/.coverprofile -covermode=atomic -tags integration
-	gover . .coverage.txt
+	gover . coverage.txt
 
 
 build: $(SOURCES)
