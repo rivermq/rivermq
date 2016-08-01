@@ -1,4 +1,4 @@
 .tags*
 rivermq
 .coverprofile
-.coverage.txt
+coverage.txt

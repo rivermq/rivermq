@@ -18,11 +18,13 @@ Goals
 
 1. Provide a single executable with minimal configuration
 1. Simple horizontal scaling
-1. Automatic discovery and configuration of RiverMQ nodes via [Raft](https://raft.github.io/)
-1. Registration with [Consul](https://www.consul.io/) and/or [Etcd](https://coreos.com/etcd/) for discovery by clients
-1. Securred communication between RiverMQ nodes with [ZeroMQ](http://zeromq.org/)
-1. Message storage and flowthrough visualization wtih [Redis](http://redis.io//), [Angular.js](https://angularjs.org/), and some charting library.
+1. Automatic discovery and configuration of RiverMQ nodes via [Serf](https://www.serf.io/)
+1. Secured communication between RiverMQ nodes with [ZeroMQ](http://zeromq.org/)
+1. Message and Subscription storage with [MongoDB](https://mongodb.org)
+1. Administration UI with [Angular.js](https://angularjs.org/), and some charting library.
 1. Metrics with [Prometheus](https://prometheus.io/)
+1. Allow data storage to be customizable with a plugin solution similar in design to [Docker Plugins](https://docs.docker.com/engine/extend/plugin_api/)
+
 
 
 Development
