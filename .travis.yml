@@ -1,5 +1,5 @@
 language: go
-sudo: false
+warnings_are_errors: false
 
 go:
   - 1.6
