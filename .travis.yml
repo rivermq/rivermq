@@ -4,11 +4,17 @@ sudo: false
 go:
   - 1.6
 
-# Submodule fix: https://gist.github.com/iedemam/9830045
 git:
   submodules: false
 
+# install zeromq/goczmq dependencies before loading submodules
 before_install:
+  - git clone git://github.com/jedisct1/libsodium.git
+  - ( cd libsodium; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
+  - git clone git://github.com/zeromq/libzmq.git
+  - ( cd libzmq; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
+  - git clone git://github.com/zeromq/czmq.git
+  - ( cd czmq; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
   - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
   - git submodule update --init --recursive
   - go get github.com/modocache/gover

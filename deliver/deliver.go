@@ -8,10 +8,10 @@ import (
 	"github.com/rivermq/rivermq/model"
 )
 
-// AttemptMessageDistrobution passes the provided Message to the provided
+// AttemptMessageDistribution passes the provided Message to the provided
 // Subscription.CallbackURL.  If delivery fails, the message is saved to the DB
 // for redelivery at a later time.
-func AttemptMessageDistrobution(msg model.Message, sub model.Subscription) (err error) {
+func AttemptMessageDistribution(msg model.Message, sub model.Subscription) (err error) {
 	req, err := http.NewRequest("POST", sub.CallbackURL, bytes.NewBuffer(msg.Body))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}

@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/rivermq/rivermq/inspect"
 	. "github.com/rivermq/rivermq/model"
 	. "github.com/rivermq/rivermq/route"
 )
@@ -19,10 +21,25 @@ const (
 	validMsg = `{"type":"msgType","body":{"state":"CO"}}`
 )
 
-// TestAttemptMessageDistrobution attempts to send a message to a test server
-func TestAttemptMessageDistrobution(t *testing.T) {
+var (
+	// wg is used to indicate that all tests are complete
+	wg sync.WaitGroup
+)
+
+func init() {
+	wg.Add(2)
+	go func() {
+		wg.Wait()
+		inspect.ShutdownPullSocket()
+	}()
+}
+
+// TestAttemptMessageDistribution attempts to send a message to a test server
+func TestAttemptMessageDistribution(t *testing.T) {
 	defer dropMessageCollection()
 	defer dropSubscriptionCollection()
+	defer wg.Done()
+
 	resultChannel := make(chan bool, 1)
 	// Server that will subscribe to a given message
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +83,11 @@ func TestAttemptMessageDistrobution(t *testing.T) {
 
 }
 
-func TestAttemptMessageDistrobutionFailure(t *testing.T) {
+func TestAttemptMessageDistributionFailure(t *testing.T) {
 	defer dropMessageCollection()
 	defer dropSubscriptionCollection()
+	defer wg.Done()
+
 	// Create subscription in RiverMQ
 	sub := Subscription{
 		Type:        "msgType",

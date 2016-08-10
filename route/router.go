@@ -4,27 +4,72 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rivermq/rivermq/handler"
 	"github.com/rivermq/rivermq/util"
 )
 
-// NewRiverMQRouter does something
+// NewRiverMQRouter creates a mux.Router configured with the various
+// handlers of this application
 func NewRiverMQRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
-		handler = util.Logger(handler, route.Name)
 
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(handler)
-		if route.Queries != nil {
-			for key := range route.Queries {
-				router.Queries(key, route.Queries[key])
-			}
+	registerHandler(router,
+		"CreateSubscriptionHandler",
+		"POST",
+		"/subscriptions",
+		handler.CreateSubscriptionHandler,
+		nil)
+
+	registerHandler(router,
+		"FindSubscriptionByIDHandler",
+		"GET",
+		"/subscriptions/{subID}",
+		handler.FindSubscriptionByIDHandler,
+		nil)
+
+	registerHandler(router,
+		"FindAllSubscriptionsHandler",
+		"GET",
+		"/subscriptions",
+		handler.FindAllSubscriptionsHandler,
+		map[string]string{
+			"type": "{type:^\\w+$}",
+		})
+
+	registerHandler(router,
+		"DeleteSubscriptionByIDHandler",
+		"DELETE",
+		"/subscriptions/{subID}",
+		handler.DeleteSubscriptionByIDHandler,
+		nil)
+
+	registerHandler(router,
+		"CreateMessageHander",
+		"POST",
+		"/messages",
+		handler.CreateMessageHander,
+		nil)
+
+	return router
+}
+
+func registerHandler(router *mux.Router,
+	name string,
+	method string,
+	path string,
+	handlerFunc http.HandlerFunc,
+	queryParams map[string]string) {
+
+	handler := util.Logger(handlerFunc, name)
+	router.
+		Methods(method).
+		Path(path).
+		Name(name).
+		Handler(handler)
+
+	if queryParams != nil {
+		for key := range queryParams {
+			router.Queries(key, queryParams[key])
 		}
 	}
-	return router
 }

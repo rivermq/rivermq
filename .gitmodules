@@ -37,3 +37,6 @@
 [submodule "vendor/github.com/prometheus/common"]
 	path = vendor/github.com/prometheus/common
 	url = git@github.com:prometheus/common.git
+[submodule "vendor/github.com/zeromq/goczmq"]
+	path = vendor/github.com/zeromq/goczmq
+	url = git@github.com:zeromq/goczmq.git
