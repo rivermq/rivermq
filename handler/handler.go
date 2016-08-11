@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	pushSocket *goczmq.Sock
-	encoder    *gob.Encoder
+	handlerPushSocket *goczmq.Sock
+	encoder           *gob.Encoder
 )
 
 func init() {
-	pushSocket, _ = goczmq.NewPush("inproc://handler")
-	encoder = gob.NewEncoder(pushSocket)
+	handlerPushSocket, _ = goczmq.NewPush("inproc://handler")
+	encoder = gob.NewEncoder(handlerPushSocket)
 }
 
 // CreateMessageHander accepts a message or delivery

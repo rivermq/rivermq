@@ -66,7 +66,7 @@ func SaveMessage(msg Message) (resultMsg Message, err error) {
 
 // SaveFailedDeliveryMessage prepares a message for redelivery and saves it
 // to the DB
-func SaveFailedDeliveryMessage(msg Message, sub Subscription) (err error) {
+func SaveFailedDeliveryMessage(msg Message) (err error) {
 	session := DBSession.Copy()
 	defer session.Close()
 	c := session.DB(DBName).C(MessageCollection)
@@ -74,7 +74,6 @@ func SaveFailedDeliveryMessage(msg Message, sub Subscription) (err error) {
 	// prepare message for retry delivery
 	msg.ID = uuid.NewUUID().String()
 	msg.Status = StatusFailedDelivery
-	msg.RetryEndpoint = sub.CallbackURL
 	msg.Timestamp = bson.Now()
 
 	err = c.Insert(msg)

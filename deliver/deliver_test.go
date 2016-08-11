@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rivermq/rivermq/deliver"
 	"github.com/rivermq/rivermq/inspect"
 	. "github.com/rivermq/rivermq/model"
 	. "github.com/rivermq/rivermq/route"
@@ -31,6 +32,7 @@ func init() {
 	go func() {
 		wg.Wait()
 		inspect.ShutdownPullSocket()
+		deliver.ShutdownPullSocket()
 	}()
 }
 

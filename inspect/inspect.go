@@ -3,32 +3,33 @@ package inspect
 import (
 	"encoding/gob"
 	"log"
-	"os"
 
-	"github.com/rivermq/rivermq/deliver"
 	"github.com/rivermq/rivermq/model"
 	"github.com/zeromq/goczmq"
 )
 
 var (
-	pullSocket      *goczmq.Sock
-	decoder         *gob.Decoder
-	shutdownChannel chan bool
+	handlerPullSocket *goczmq.Sock
+	inspectPushSocket *goczmq.Sock
+	decoder           *gob.Decoder
+	encoder           *gob.Encoder
+	shutdownChannel   chan bool
 )
 
 func init() {
-	log.SetOutput(os.Stderr)
-	pullSocket, err := goczmq.NewPull("inproc://handler")
+	handlerPullSocket, err := goczmq.NewPull("inproc://handler")
+	inspectPushSocket, err := goczmq.NewPush("inproc://inspect")
 	if err != nil {
 		panic(err)
 	}
-	decoder = gob.NewDecoder(pullSocket)
+	decoder = gob.NewDecoder(handlerPullSocket)
+	encoder = gob.NewEncoder(inspectPushSocket)
 	shutdownChannel = make(chan bool, 1)
 
 	go func() {
 		shutdownMsg := <-shutdownChannel
 		if shutdownMsg {
-			pullSocket.Destroy()
+			handlerPullSocket.Destroy()
 		}
 	}()
 
@@ -42,7 +43,7 @@ func init() {
 
 }
 
-// ShutdownPullSocket provides a method to shutdown the blocked subSocket
+// ShutdownPullSocket provides a method to shutdown the blocked inspectPullSocket
 func ShutdownPullSocket() {
 	shutdownChannel <- true
 }
@@ -60,9 +61,10 @@ func HandleMessage(msg model.Message) (err error) {
 		msg.Status = model.StatusInspected
 		model.UpdateMessage(msg)
 		for _, sub := range subs {
-			go func(msg model.Message, sub model.Subscription) {
-				deliver.AttemptMessageDistribution(msg, sub)
-			}(msg, sub)
+			msg.RetryEndpoint = sub.CallbackURL
+			go func(msg model.Message) {
+				encoder.Encode(msg)
+			}(msg)
 		}
 	}
 
